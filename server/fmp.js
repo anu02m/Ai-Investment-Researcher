@@ -31,4 +31,4 @@ async function getFinancialData(ticker){
     };
 }
 
-module.export = { getFinancialData };
+module.exports = { getFinancialData };

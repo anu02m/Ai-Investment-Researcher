@@ -3,7 +3,7 @@ const { TavilySearch } = require ("@langchain/tavily");
 
 async function searchCompanyNews(CompanyName){
     const searchTool = new TavilySearch({
-        maxResult: 5,
+        maxResults: 5,
         tavilyApiKey: process.env.TAVILY_API_KEY,
     });
 
@@ -14,4 +14,4 @@ async function searchCompanyNews(CompanyName){
     return results;
 }
 
-module.export = { searchCompanyNews };
+module.exports = { searchCompanyNews };
