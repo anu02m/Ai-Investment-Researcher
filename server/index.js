@@ -53,12 +53,20 @@ app.post("/research", async (req, res) => {
     );
 
     res.json({
-      companyName: identified.companyName,
-      ticker: identified.ticker,
-      financialData,
-      usedFallback,
-      decision,
-    });
+  companyName: identified.companyName,
+  ticker: identified.ticker,
+  origin: identified.origin,
+  founderName: identified.founderName,
+  sector: identified.sector,
+  isPubliclyTraded: identified.isPubliclyTraded,
+  marketValue: financialData?.profile?.marketCap
+    ? `$${(financialData.profile.marketCap / 1e9).toFixed(1)}B`
+    : "Not publicly disclosed (private company or data unavailable)",
+  financialData,
+  newsHeadlines: newsResults.results,
+  usedFallback,
+  decision,
+});
   } catch (err) {
     console.error("Error in /research:", err.message);
     res.status(500).json({ error: "Something went wrong while researching" });
