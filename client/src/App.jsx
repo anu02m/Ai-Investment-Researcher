@@ -19,7 +19,7 @@ function App() {
     setResult(null);
 
     try {
-      const res = await fetch("`${API_URL}/research`", {
+      const res = await fetch(`${API_URL}/research`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ companyName: name }),
