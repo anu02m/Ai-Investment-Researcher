@@ -2,17 +2,18 @@ require("dotenv").config();
 const { ChatGroq } = require("@langchain/groq");
 
 const model = new ChatGroq({
-    model: "llama-3.3-70b-versatile",
-    temperature: 0,
+  model: "llama-3.3-70b-versatile",
+  temperature: 0,
 });
 
-async function makeDecision(companyName, financialData, newsResult){
-    const newsSnippets = newsResult.results
+async function makeDecision(companyName, financialData, newsResults, fallbackData) {
+  const newsSnippets = newsResults.results
     .map((r) => `- ${r.title}: ${r.content}`)
     .join("\n");
 
-    const prompt = `You are an investment analyst. Analyze ${companyName} using the real data below and decide: INVEST or PASS.
-
+  let financialSection;
+  if (financialData) {
+    financialSection = `
 FINANCIAL DATA:
 - Revenue: $${financialData.income.revenue}
 - Net Income: $${financialData.income.netIncome}
@@ -24,12 +25,33 @@ FINANCIAL DATA:
 - Total Debt: $${financialData.balance.totalDebt}
 - Free Cash Flow: $${financialData.cashFlow.freeCashFlow}
 - Current Stock Price: $${financialData.profile.price}
+`;
+  } else {
+  const fallbackSnippets = fallbackData.results
+    .map((r) => `- ${r.title}: ${r.content}`)
+    .join("\n");
+  financialSection = `
+STRUCTURED FINANCIAL DATA WAS NOT AVAILABLE for this company. This usually means one of:
+(a) the company is not publicly traded / listed on a stock exchange,
+(b) it trades on an exchange not covered by our data provider (e.g. non-US exchanges),
+(c) the company name/ticker could not be matched correctly.
+
+Below is what web search found instead — use it to determine WHICH of the above reasons applies, and say so explicitly and clearly in your reasoning. Do not give a vague "data was incomplete" answer — state the specific reason if you can determine it from the search results.
+
+WEB SEARCH RESULTS:
+${fallbackSnippets}
+`;
+}
+  const prompt = `
+You are an investment analyst. Analyze ${companyName} using the real data below and decide: INVEST or PASS.
+
+${financialSection}
 
 RECENT NEWS:
 ${newsSnippets}
 
-Based on this real data, decide whether to INVEST or PASS. Weigh profitability, valuation (is PE ratio reasonable?), debt levels, cash flow health, and recent news sentiment together.
-
+Based on this real data, decide whether to INVEST or PASS. Weigh profitability, valuation, debt levels, cash flow health, and recent news sentiment together.
+If the company does not appear to be publicly traded (e.g. it's a private company, a startup, an ed-tech platform, a community/media brand, etc.), your decision should be "PASS", your confidence should be "High" (since the reason is clear-cut, not uncertain), and your reasoning MUST state plainly that this company is not publicly investable and explain why, rather than discussing financial metrics that don't apply.
 Respond ONLY in this exact JSON format, no other text, no markdown:
 {
   "decision": "INVEST" or "PASS",
@@ -40,11 +62,8 @@ Respond ONLY in this exact JSON format, no other text, no markdown:
 }
 `;
 
-const response = await model.invoke(prompt);
-return JSON.parse(response.content);
+  const response = await model.invoke(prompt);
+  return JSON.parse(response.content);
 }
-
-const { getFinancialData } = require("./fmp");
-const { searchCompanyNews } = require("./tavily");
 
 module.exports = { makeDecision };
