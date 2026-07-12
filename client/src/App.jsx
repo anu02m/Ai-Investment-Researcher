@@ -3,6 +3,7 @@ import "./App.css";
 
 const SUGGESTIONS = ["Apple", "Tesla", "Microsoft"];
 const CONFIDENCE_PCT = { High: 90, Medium: 60, Low: 30 };
+const API_URL = import.meta.env.VITE_API_URL;
 
 function App() {
   const [companyName, setCompanyName] = useState("");
@@ -18,7 +19,7 @@ function App() {
     setResult(null);
 
     try {
-      const res = await fetch("http://127.0.0.1:5000/research", {
+      const res = await fetch("`${API_URL}/research`", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ companyName: name }),
